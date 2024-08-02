@@ -138,7 +138,7 @@ ipcMain.handle("print-iframe", async (event, iframeHTML, printName) => {
   printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURI(iframeHTML)}`);
 
   printWindow.webContents.on("did-finish-load", async () => {
-    /*const printerList = await printWindow.webContents.getPrintersAsync();
+    const printerList = await printWindow.webContents.getPrintersAsync();
     const defaultPrinter = printerList.find((printer) => printer.isDefault);
 
     printWindow.webContents.print(
@@ -150,7 +150,7 @@ ipcMain.handle("print-iframe", async (event, iframeHTML, printName) => {
       () => {
         printWindow.close();
       }
-    );*/
+    );
   });
 });
 
