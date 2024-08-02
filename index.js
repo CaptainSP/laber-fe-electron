@@ -148,7 +148,7 @@ ipcMain.handle("print-iframe", async (event, iframeHTML, printName) => {
         printBackground: true,
       },
       () => {
-        printWindow.close();
+        //printWindow.close();
       }
     );
   });
