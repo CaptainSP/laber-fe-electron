@@ -45,7 +45,7 @@ function createWindow() {
   // İlk açıldığında tam ekran moduna geç
   mainWindow.setKiosk(true);
 
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 
   // Kamera iznini otomatik vermek için
   session.defaultSession.setPermissionRequestHandler(
