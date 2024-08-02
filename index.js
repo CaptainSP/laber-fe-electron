@@ -43,7 +43,7 @@ function createWindow() {
   //mainWindow.loadFile("index.html");
 
   // İlk açıldığında tam ekran moduna geç
-  mainWindow.setKiosk(false);
+  mainWindow.setKiosk(true);
 
   mainWindow.webContents.openDevTools();
 
@@ -133,7 +133,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 ipcMain.handle("print-iframe", async (event, url, printName) => {
-  const printWindow = new BrowserWindow({ show: true });
+  const printWindow = new BrowserWindow({ show: false });
 
   printWindow.loadURL(url);
 
@@ -148,7 +148,7 @@ ipcMain.handle("print-iframe", async (event, url, printName) => {
         printBackground: true,
       },
       () => {
-        //printWindow.close();
+        printWindow.close();
       }
     );
   });
