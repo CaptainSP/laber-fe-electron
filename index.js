@@ -132,10 +132,10 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-ipcMain.handle("print-iframe", async (event, iframeHTML, printName) => {
+ipcMain.handle("print-iframe", async (event, url, printName) => {
   const printWindow = new BrowserWindow({ show: true });
 
-  printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURI(iframeHTML)}`);
+  printWindow.loadURL(url);
 
   printWindow.webContents.on("did-finish-load", async () => {
     const printerList = await printWindow.webContents.getPrintersAsync();
