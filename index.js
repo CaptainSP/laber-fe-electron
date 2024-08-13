@@ -168,6 +168,7 @@ ipcMain.handle("get-printers", async (event) => {
 });
 
 ipcMain.handle("save-video", async (event, videoArrayBuffer) => {
+  console.log("Saving video...");
   const fs = require("fs");
   const path = require("path");
   const filePath = path.join(app.getPath("downloads"), "video.mp4");
@@ -182,6 +183,5 @@ ipcMain.handle("stop-video", async (event) => {
 
 ipcMain.handle("start-video", async (event) => {
   await axios.post("http://localhost:5000/start-recording");
-
   return true;
 });
