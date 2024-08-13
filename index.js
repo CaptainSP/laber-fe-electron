@@ -54,7 +54,7 @@ function createWindow() {
   // Kamera iznini otomatik vermek için
   session.defaultSession.setPermissionRequestHandler(
     (webContents, permission, callback) => {
-      if (permission === "media" || permission === "display-capture" ) {
+      if (permission === "media" || permission === "display-capture") {
         return callback(true); // Kamera ve mikrofon izinlerini otomatik olarak ver
       }
       callback(false);
@@ -62,10 +62,10 @@ function createWindow() {
   );
 
   session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
-    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+    desktopCapturer.getSources({ types: ["screen"] }).then((sources) => {
       // Grant access to the first screen found.
-      callback({ video: sources[0], audio: 'loopback' })
-    })
+      callback({ video: sources[0], audio: "loopback" });
+    });
   });
 
   mainWindow.on("close", () => {
@@ -116,8 +116,6 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
-
-  
 });
 
 app.on("window-all-closed", () => {
@@ -173,15 +171,29 @@ ipcMain.handle("save-video", async (event, videoArrayBuffer) => {
   try {
     console.log("Saving video...");
 
-    const downloadsPath = app.getPath("downloads");
-    const filePath = path.join(downloadsPath, "video.mp4");
+    const desktopPath = app.getPath("desktop");
+    const filePath = path.join(desktopPath, "laber-webcam-script", "input.mp4");
 
-    await fs.promises.writeFile(filePath, Buffer.from(videoArrayBuffer));
-    
+    await fs.promises.writeFile("C:/", Buffer.from(videoArrayBuffer));
+
     console.log("Successfully saved video:", filePath);
     return filePath;
   } catch (error) {
     console.error("Error saving video:", error);
+    throw error; // Bu hata frontend'e geri iletilecek
+  }
+});
+
+ipcMain.handle("delete-video", async (event) => {
+  try {
+    console.log("Deleting video...");
+
+    const desktopPath = app.getPath("desktop");
+    const filePath = path.join(desktopPath, "laber-webcam-script", "input.mp4");
+
+    await fs.promises.unlink(filePath);
+  } catch (error) {
+    console.error("Error deleting video:", error);
     throw error; // Bu hata frontend'e geri iletilecek
   }
 });

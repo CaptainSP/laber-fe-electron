@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('electron', {
     saveVideo: (videoArrayBuffer) => ipcRenderer.invoke('save-video', videoArrayBuffer),
     stopVideo: () => ipcRenderer.invoke('stop-video'),
     startVideo: () => ipcRenderer.invoke('start-video'),
+    deleteVideo: () => ipcRenderer.invoke('delete-video'),
     // Diğer API'leri buraya ekleyebilirsiniz
 });
