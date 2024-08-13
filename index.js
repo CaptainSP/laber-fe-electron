@@ -203,19 +203,28 @@ ipcMain.handle("delete-video", async (event) => {
     const filePath = path.join(
       desktopPath,
       "laber-webcam-script",
-      video + "-input" + ".mp4"
+      videoPath + "-input" + ".mp4"
     );
 
     await fs.promises.unlink(filePath);
+
+    videoPath = null;
   } catch (error) {
     console.error("Error deleting video:", error);
     throw error; // Bu hata frontend'e geri iletilecek
   }
 });
 
-ipcMain.handle("stop-video", async (event) => {
-  await axios.post("http://localhost:5000/stop-recording");
-  return true;
+ipcMain.handle("stop-video", async (event, music) => {
+  const final = v4();
+
+  await axios.post("http://localhost:5000/stop-recording", {
+    output: outputPath + "-output" + ".mp4",
+    input: videoPath ? videoPath + "-input" + ".mp4" : undefined,
+    photo: imagePath ? imagePath + "-image" + ".png" : undefined,
+    final: final + "-final" + ".mp4",
+  });
+  return final;
 });
 
 ipcMain.handle("start-video", async (event) => {

@@ -6,8 +6,9 @@ contextBridge.exposeInMainWorld('electron', {
     printIframe: (iframeContent, printName) => ipcRenderer.invoke('print-iframe', iframeContent,printName),
     getPrinters: () => ipcRenderer.invoke('get-printers'),
     saveVideo: (videoArrayBuffer) => ipcRenderer.invoke('save-video', videoArrayBuffer),
-    stopVideo: () => ipcRenderer.invoke('stop-video'),
+    stopVideo: (music) => ipcRenderer.invoke('stop-video', music),
     startVideo: () => ipcRenderer.invoke('start-video'),
     deleteVideo: () => ipcRenderer.invoke('delete-video'),
+
     // Diğer API'leri buraya ekleyebilirsiniz
 });
