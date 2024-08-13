@@ -1,3 +1,4 @@
+const { default: axios } = require("axios");
 const {
   app,
   BrowserWindow,
@@ -5,6 +6,7 @@ const {
   Menu,
   protocol,
   ipcMain,
+  desktopCapturer,
 } = require("electron");
 const os = require("os");
 
@@ -50,7 +52,7 @@ function createWindow() {
   // Kamera iznini otomatik vermek için
   session.defaultSession.setPermissionRequestHandler(
     (webContents, permission, callback) => {
-      if (permission === "media") {
+      if (permission === "media" || permission === "display-capture" ) {
         return callback(true); // Kamera ve mikrofon izinlerini otomatik olarak ver
       }
       callback(false);
@@ -112,6 +114,8 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+
+  
 });
 
 app.on("window-all-closed", () => {
@@ -154,11 +158,30 @@ ipcMain.handle("print-iframe", async (event, url, printName) => {
   });
 });
 
-ipcMain.handle('get-printers', async (event) => {
+ipcMain.handle("get-printers", async (event) => {
   const focusedWindow = BrowserWindow.getFocusedWindow();
   if (focusedWindow) {
     const printers = await focusedWindow.webContents.getPrintersAsync();
     return printers;
   }
   return [];
+});
+
+ipcMain.handle("save-video", async (event, videoArrayBuffer) => {
+  const fs = require("fs");
+  const path = require("path");
+  const filePath = path.join(app.getPath("downloads"), "video.mp4");
+  fs.writeFileSync(filePath, Buffer.from(videoArrayBuffer));
+  return filePath;
+});
+
+ipcMain.handle("stop-video", async (event) => {
+  await axios.post("http://localhost:5000/stop-recording");
+  return true;
+});
+
+ipcMain.handle("start-video", async (event) => {
+  await axios.post("http://localhost:5000/start-recording");
+
+  return true;
 });
