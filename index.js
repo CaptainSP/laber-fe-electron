@@ -11,6 +11,7 @@ const {
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
+const { v4 } = require("uuid");
 
 let mainWindow;
 
@@ -158,6 +159,10 @@ ipcMain.handle("print-iframe", async (event, url, printName) => {
   });
 });
 
+let imagePath = v4();
+let videoPath = v4();
+let outputPath = v4();
+
 ipcMain.handle("get-printers", async (event) => {
   const focusedWindow = BrowserWindow.getFocusedWindow();
   if (focusedWindow) {
@@ -171,8 +176,10 @@ ipcMain.handle("save-video", async (event, videoArrayBuffer) => {
   try {
     console.log("Saving video...");
 
+    videoPath = v4();
+
     const desktopPath = app.getPath("desktop");
-    const filePath = path.join(desktopPath, "laber-webcam-script", "input.mp4");
+    const filePath = path.join(desktopPath, "laber-webcam-script", videoPath + ".mp4");
 
     await fs.promises.writeFile(filePath, Buffer.from(videoArrayBuffer));
 
@@ -189,7 +196,7 @@ ipcMain.handle("delete-video", async (event) => {
     console.log("Deleting video...");
 
     const desktopPath = app.getPath("desktop");
-    const filePath = path.join(desktopPath, "laber-webcam-script", "input.mp4");
+    const filePath = path.join(desktopPath, "laber-webcam-script", video + ".mp4");
 
     await fs.promises.unlink(filePath);
   } catch (error) {
@@ -205,5 +212,12 @@ ipcMain.handle("stop-video", async (event) => {
 
 ipcMain.handle("start-video", async (event) => {
   await axios.post("http://localhost:5000/start-recording");
+  return true;
+});
+
+ipcMain.handle("save-image", async (event) => {
+  const desktopPath = app.getPath("desktop");
+  const filePath = path.join(desktopPath, "laber-webcam-script", imagePath + ".png");
+  await fs.promises.unlink(filePath);
   return true;
 });
