@@ -174,7 +174,7 @@ ipcMain.handle("save-video", async (event, videoArrayBuffer) => {
     const desktopPath = app.getPath("desktop");
     const filePath = path.join(desktopPath, "laber-webcam-script", "input.mp4");
 
-    await fs.promises.writeFile("C:/", Buffer.from(videoArrayBuffer));
+    await fs.promises.writeFile(filePath, Buffer.from(videoArrayBuffer));
 
     console.log("Successfully saved video:", filePath);
     return filePath;
