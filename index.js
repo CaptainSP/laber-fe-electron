@@ -9,6 +9,7 @@ const {
   desktopCapturer,
 } = require("electron");
 const os = require("os");
+const path = require("path");
 
 let mainWindow;
 
