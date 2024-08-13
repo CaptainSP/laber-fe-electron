@@ -60,10 +60,10 @@ function createWindow() {
   );
 
   session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
-    desktopCapturer.getSources({ types: ["screen", video] }).then((sources) => {
+    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
       // Grant access to the first screen found.
-      callback({ video: sources[0], audio: "loopback" });
-    });
+      callback({ video: sources[0], audio: 'loopback' })
+    })
   });
 
   mainWindow.on("close", () => {
