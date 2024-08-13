@@ -168,12 +168,20 @@ ipcMain.handle("get-printers", async (event) => {
 });
 
 ipcMain.handle("save-video", async (event, videoArrayBuffer) => {
-  console.log("Saving video...");
-  const fs = require("fs");
-  const path = require("path");
-  const filePath = path.join(app.getPath("downloads"), "video.mp4");
-  fs.writeFileSync(filePath, Buffer.from(videoArrayBuffer));
-  return filePath;
+  try {
+    console.log("Saving video...");
+
+    const downloadsPath = app.getPath("downloads");
+    const filePath = path.join(downloadsPath, "video.mp4");
+
+    await fs.promises.writeFile(filePath, Buffer.from(videoArrayBuffer));
+    
+    console.log("Successfully saved video:", filePath);
+    return filePath;
+  } catch (error) {
+    console.error("Error saving video:", error);
+    throw error; // Bu hata frontend'e geri iletilecek
+  }
 });
 
 ipcMain.handle("stop-video", async (event) => {
