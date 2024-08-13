@@ -179,7 +179,11 @@ ipcMain.handle("save-video", async (event, videoArrayBuffer) => {
     videoPath = v4();
 
     const desktopPath = app.getPath("desktop");
-    const filePath = path.join(desktopPath, "laber-webcam-script", videoPath + ".mp4");
+    const filePath = path.join(
+      desktopPath,
+      "laber-webcam-script",
+      videoPath + "-input" + ".mp4"
+    );
 
     await fs.promises.writeFile(filePath, Buffer.from(videoArrayBuffer));
 
@@ -196,7 +200,11 @@ ipcMain.handle("delete-video", async (event) => {
     console.log("Deleting video...");
 
     const desktopPath = app.getPath("desktop");
-    const filePath = path.join(desktopPath, "laber-webcam-script", video + ".mp4");
+    const filePath = path.join(
+      desktopPath,
+      "laber-webcam-script",
+      video + "-input" + ".mp4"
+    );
 
     await fs.promises.unlink(filePath);
   } catch (error) {
@@ -217,7 +225,11 @@ ipcMain.handle("start-video", async (event) => {
 
 ipcMain.handle("save-image", async (event) => {
   const desktopPath = app.getPath("desktop");
-  const filePath = path.join(desktopPath, "laber-webcam-script", imagePath + ".png");
+  const filePath = path.join(
+    desktopPath,
+    "laber-webcam-script",
+    imagePath + "-image" + ".png"
+  );
   await fs.promises.unlink(filePath);
   return true;
 });
