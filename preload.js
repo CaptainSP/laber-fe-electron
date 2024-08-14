@@ -9,6 +9,6 @@ contextBridge.exposeInMainWorld('electron', {
     stopVideo: (music) => ipcRenderer.invoke('stop-video', music),
     startVideo: () => ipcRenderer.invoke('start-video'),
     deleteVideo: () => ipcRenderer.invoke('delete-video'),
-
+    saveImage: (imageArrayBuffer) => ipcRenderer.invoke('save-image', imageArrayBuffer),
     // Diğer API'leri buraya ekleyebilirsiniz
 });
