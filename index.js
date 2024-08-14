@@ -239,6 +239,6 @@ ipcMain.handle("save-image", async (event) => {
     "laber-webcam-script",
     imagePath + "-image" + ".png"
   );
-  await fs.promises.unlink(filePath);
+  await fs.promises.writeFile(filePath, Buffer.from(imageArrayBuffer));
   return true;
 });
