@@ -232,7 +232,7 @@ ipcMain.handle("start-video", async (event) => {
   return true;
 });
 
-ipcMain.handle("save-image", async (event) => {
+ipcMain.handle("save-image", async (event, imageArrayBuffer) => {
   const desktopPath = app.getPath("desktop");
   const filePath = path.join(
     desktopPath,
