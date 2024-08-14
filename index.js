@@ -284,3 +284,8 @@ ipcMain.handle("save-image", async (event, imageArrayBuffer) => {
   await fs.promises.writeFile(filePath, Buffer.from(imageArrayBuffer));
   return true;
 });
+
+ipcMain.handle("get-video", async (event, absPath) => {
+  const arrayBuffer = await fs.promises.readFile(absPath);
+  return arrayBuffer;
+});

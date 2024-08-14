@@ -14,5 +14,6 @@ contextBridge.exposeInMainWorld("electron", {
   deleteVideo: () => ipcRenderer.invoke("delete-video"),
   saveImage: (imageArrayBuffer) =>
     ipcRenderer.invoke("save-image", imageArrayBuffer),
+  getVideo: (path) => ipcRenderer.invoke("get-video", path),
   // Diğer API'leri buraya ekleyebilirsiniz
 });
