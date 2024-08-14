@@ -229,7 +229,7 @@ ipcMain.handle("stop-video", async (event, music) => {
 });
 
 ipcMain.handle("start-video", async (event) => {
-  await axios.post("http://localhost:5000/start_recording", {
+  await axios.post("http://localhost:5000/start_video", {
     output : outputPath + "-output" + ".mp4",
     duration : 60 * 10
   });
