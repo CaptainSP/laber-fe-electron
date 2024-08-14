@@ -218,14 +218,41 @@ ipcMain.handle("delete-video", async (event) => {
 ipcMain.handle("merge-video", async (event, music) => {
   const final = v4();
 
+  const desktopPath = app.getPath("desktop");
+  const absOutput = path.join(
+    desktopPath,
+    "laber-webcam-script",
+    outputPath + "-output" + ".mp4"
+  );
+
+  const absInput = path.join(
+    desktopPath,
+    "laber-webcam-script",
+    videoPath + "-input" + ".mp4"
+  );
+
+  const absPhoto = path.join(
+    desktopPath,
+    "laber-webcam-script",
+    imagePath + "-image" + ".png"
+  );
+
+  const absFinal = path.join(
+    desktopPath,
+    "laber-webcam-script",
+    final + "-final" + ".mp4"
+  );
+
+  const absMusic = path.join(desktopPath, "laber-webcam-script", music);
+
   await axios.post("http://localhost:5000/merge_videos", {
-    output: outputPath + "-output" + ".mp4",
-    input: videoPath ? videoPath + "-input" + ".mp4" : undefined,
-    photo: imagePath ? imagePath + "-image" + ".png" : undefined,
-    final: final + "-final" + ".mp4",
-    music: music,
+    output: absOutput,
+    input: absInput,
+    photo: absPhoto,
+    final: absFinal,
+    music: absMusic,
   });
-  return final;
+  return absFinal;
 });
 
 ipcMain.handle("start-video", async (event) => {
