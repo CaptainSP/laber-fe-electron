@@ -215,10 +215,10 @@ ipcMain.handle("delete-video", async (event) => {
   }
 });
 
-ipcMain.handle("stop-video", async (event, music) => {
+ipcMain.handle("merge-video", async (event, music) => {
   const final = v4();
 
-  await axios.post("http://localhost:5000/stop_recording", {
+  await axios.post("http://localhost:5000/merge_videos", {
     output: outputPath + "-output" + ".mp4",
     input: videoPath ? videoPath + "-input" + ".mp4" : undefined,
     photo: imagePath ? imagePath + "-image" + ".png" : undefined,
@@ -230,9 +230,14 @@ ipcMain.handle("stop-video", async (event, music) => {
 
 ipcMain.handle("start-video", async (event) => {
   await axios.post("http://localhost:5000/start_video", {
-    output : outputPath + "-output" + ".mp4",
-    duration : 60 * 10
+    output: outputPath + "-output" + ".mp4",
+    duration: 60 * 10,
   });
+  return true;
+});
+
+ipcMain.handle("stop-video", async (event) => {
+  await axios.get("http://localhost:5000/stop_recording");
   return true;
 });
 
