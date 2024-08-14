@@ -256,8 +256,14 @@ ipcMain.handle("merge-video", async (event, music) => {
 });
 
 ipcMain.handle("start-video", async (event) => {
+  const desktopPath = app.getPath("desktop");
+  const absOutput = path.join(
+    desktopPath,
+    "laber-webcam-script",
+    outputPath + "-output" + ".mp4"
+  );
   await axios.post("http://localhost:5000/start_video", {
-    output: outputPath + "-output" + ".mp4",
+    output: absOutput,
     duration: 60 * 10,
   });
   return true;
