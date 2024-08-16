@@ -15,7 +15,8 @@
     "@google-cloud/speech": "^6.7.0",
     "axios": "^1.7.3",
     "node-record-lpcm16": "^1.0.1",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "web-audio-api": "^0.2.2"
   },
   "devDependencies": {
     "electron": "^31.3.1",

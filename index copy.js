@@ -55,7 +55,6 @@ class Recording {
       "-t",
       "waveaudio",
       0,
-      '-'
     ]
     const cp = spawn(cmd, args2, cmdOptions)
     const rec = cp.stdout
@@ -73,6 +72,7 @@ Enable debugging with the environment variable DEBUG=record.`
     })
 
     err.on('data', chunk => {
+      console.log(`STDERR: ${chunk}`)
       debug(`STDERR: ${chunk}`)
     })
 

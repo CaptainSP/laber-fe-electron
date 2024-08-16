@@ -22,6 +22,9 @@ const client = new speech.SpeechClient({
 
 let mainWindow;
 
+// set env to development
+process.env.NODE_ENV = "development";
+
 process.env.DEBUG = "record";
 
 function getLocalIpAddress() {

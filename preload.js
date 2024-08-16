@@ -24,5 +24,6 @@ contextBridge.exposeInMainWorld("electron", {
       callback(data)
     });
   },
+  sendRecordings: (data) => ipcRenderer.send("record-data", data),
   // Diğer API'leri buraya ekleyebilirsiniz
 });
