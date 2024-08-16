@@ -22,6 +22,8 @@ const client = new speech.SpeechClient({
 
 let mainWindow;
 
+process.env.DEBUG = "record";
+
 function getLocalIpAddress() {
   const interfaces = os.networkInterfaces();
   for (const name of Object.keys(interfaces)) {
