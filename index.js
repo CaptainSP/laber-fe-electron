@@ -51,13 +51,13 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
-  mainWindow.loadURL("https://kiosk.cerebeye.io/");
+  mainWindow.loadURL("http://10.0.0.16:3001/aichat");
   //mainWindow.loadFile("index.html");
 
   // İlk açıldığında tam ekran moduna geç
-  mainWindow.setKiosk(true);
+  mainWindow.setKiosk(false);
 
-  //mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   session.defaultSession.webRequest.onBeforeSendHeaders(
     this.filter,
@@ -158,52 +158,65 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-ipcMain.handle("start-recording", async (event) => {
-  return new Promise((resolve, reject) => {
-    const recognizeStream = client
-      .streamingRecognize({
-        config: {
-          encoding: "LINEAR16",
-          sampleRateHertz: 16000,
-          languageCode: "fr-FR",
-          enableSpeakerDiarization: true,
-          model: "latest_long",
-        },
-        interimResults: true,
-      })
-      .on("error", reject)
-      .on("data", (data) => {
-        console.log(
-          `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`
-        );
-        if (data.results[0]?.isFinal)
-          console.log(
-            "whole sentence :",
-            data.results[0]?.alternatives?.[0]?.words
-              ?.map((w) => w.word)
-              ?.join(" ")
-          );
-        resolve(
-          data.results[0]?.alternatives?.[0]?.words
-            ?.map((w) => w.word)
-            ?.join(" ")
-        );
+let event;
+const recognizeStream = client
+  .streamingRecognize({
+    config: {
+      encoding: "LINEAR16",
+      sampleRateHertz: 16000,
+      languageCode: "tr-TR",
+      enableSpeakerDiarization: true,
+      model: "latest_long",
+    },
+    interimResults: true,
+  })
+  .on("error", console.error)
+  .on("data", (data) => {
+    console.log(
+      `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`
+    );
+    if (data.results[0]?.isFinal) {
+      console.log(
+        "Final transcript : ",
+        data.results[0]?.alternatives?.[0]?.transcript
+      );
+    }
+    if (event) {
+      event.sender.send("text", {
+        text: data.results[0]?.alternatives?.[0]?.transcript,
+        isFinal: data.results[0]?.isFinal,
       });
-
-    const audioStream = recorder
-      .record({
-        sampleRate: 16000, // Sample rate (adjust as needed)
-        channels: 1, // Mono audio
-        audioType: "raw", // Output audio type
-      })
-      .stream();
-
-    audioStream.on("end", () => {
-      recognizeStream.end();
-    });
-
-    audioStream.pipe(recognizeStream);
+    }
   });
+
+const audioStream = recorder
+  .record({
+    sampleRate: 16000, // Sample rate (adjust as needed)
+    channels: 1, // Mono audio
+    audioType: "raw", // Output audio type
+  })
+  .stream();
+
+audioStream.on("end", () => {
+  if (recognizeStream) {
+    recognizeStream.end();
+    recognizeStream = null;
+  }
+});
+
+audioStream.pipe(recognizeStream);
+
+audioStream.pause();
+
+ipcMain.on("start-recording", async (a) => {
+  event = a;
+  console.log("Recording started...");
+  audioStream.resume();
+});
+
+ipcMain.handle("pause-recording", async (event) => {
+  console.log("Recording paused...");
+  audioStream.pause();
 });
 
 ipcMain.handle("print-iframe", async (event, url, printName) => {

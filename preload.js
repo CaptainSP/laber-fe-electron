@@ -15,6 +15,14 @@ contextBridge.exposeInMainWorld("electron", {
   saveImage: (imageArrayBuffer) =>
     ipcRenderer.invoke("save-image", imageArrayBuffer),
   getVideo: (path) => ipcRenderer.invoke("get-video", path),
-  startRecording: () => ipcRenderer.invoke("start-recording"),
+  startRecording: () => ipcRenderer.send("start-recording"),
+  pauseRecording: () => ipcRenderer.invoke("pause-recording"),
+  onText: (callback) => {
+    console.log("onText listens");
+    ipcRenderer.on("text", (event, data) => {
+      console.log("onText received", data);
+      callback(data)
+    });
+  },
   // Diğer API'leri buraya ekleyebilirsiniz
 });
