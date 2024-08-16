@@ -171,7 +171,8 @@ recording = recorder.record({
   channels: 1, // Mono audio
   audioType: "wav", // Output audio type,
   recorder: "sox", // Try also "arecord" or "sox"
-  device: "plughw:1,0", // Try also "plughw:1,0" or "plughw:0,0"
+  device: "plughw:1,0", // Try also "plughw:1,0" or "plughw:0,0",
+  debug: true,
 });
 audioStream = recording.stream();
 audioStream.on("end", () => {
