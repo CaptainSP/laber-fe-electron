@@ -170,7 +170,7 @@ recording = recorder.record({
   sampleRate: 16000, // Sample rate (adjust as needed)
   channels: 1, // Mono audio
   audioType: "raw", // Output audio type,
-  recorder: "rec", // Try also "arecord" or "sox"
+  recorder: "arecord", // Try also "arecord" or "sox"
 });
 audioStream = recording.stream();
 audioStream.on("end", () => {
