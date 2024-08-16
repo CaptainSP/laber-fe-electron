@@ -159,44 +159,17 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let event;
-const recognizeStream = client
-  .streamingRecognize({
-    config: {
-      encoding: "LINEAR16",
-      sampleRateHertz: 16000,
-      languageCode: "tr-TR",
-      enableSpeakerDiarization: true,
-      model: "latest_long",
-    },
-    interimResults: true,
-  })
-  .on("error", console.error)
-  .on("data", (data) => {
-    console.log(
-      `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`
-    );
-    if (data.results[0]?.isFinal) {
-      console.log(
-        "Final transcript : ",
-        data.results[0]?.alternatives?.[0]?.transcript
-      );
-    }
-    if (event) {
-      event.sender.send("text", {
-        text: data.results[0]?.alternatives?.[0]?.transcript,
-        isFinal: data.results[0]?.isFinal,
-      });
-    }
-  });
 
-const audioStream = recorder
-  .record({
-    sampleRate: 16000, // Sample rate (adjust as needed)
-    channels: 1, // Mono audio
-    audioType: "raw", // Output audio type
-  })
-  .stream();
+let audioStream;
+let recording;
+let recognizeStream;
 
+recording = recorder.record({
+  sampleRate: 16000, // Sample rate (adjust as needed)
+  channels: 1, // Mono audio
+  audioType: "raw", // Output audio type
+});
+audioStream = recording.stream();
 audioStream.on("end", () => {
   if (recognizeStream) {
     recognizeStream.end();
@@ -204,19 +177,54 @@ audioStream.on("end", () => {
   }
 });
 
-audioStream.pipe(recognizeStream);
-
-audioStream.pause();
+recording.pause();
 
 ipcMain.on("start-recording", async (a) => {
   event = a;
   console.log("Recording started...");
-  audioStream.resume();
+
+  recognizeStream = client
+    .streamingRecognize({
+      config: {
+        encoding: "LINEAR16",
+        sampleRateHertz: 16000,
+        languageCode: "tr-TR",
+        enableSpeakerDiarization: true,
+        model: "latest_long",
+      },
+      interimResults: true,
+    })
+    .on("error", console.error)
+    .on("data", (data) => {
+      console.log(
+        `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`
+      );
+      if (data.results[0]?.isFinal) {
+        console.log(
+          "Final transcript : ",
+          data.results[0]?.alternatives?.[0]?.transcript
+        );
+      }
+      if (event) {
+        event.sender.send("text", {
+          text: data.results[0]?.alternatives?.[0]?.transcript,
+          isFinal: data.results[0]?.isFinal,
+        });
+      }
+    });
+
+  audioStream.pipe(recognizeStream);
+
+  recording.resume();
 });
 
 ipcMain.handle("pause-recording", async (event) => {
   console.log("Recording paused...");
-  audioStream.pause();
+  recording.pause();
+  if (recognizeStream) {
+    recognizeStream.end();
+    recognizeStream = null;
+  }
 });
 
 ipcMain.handle("print-iframe", async (event, url, printName) => {
