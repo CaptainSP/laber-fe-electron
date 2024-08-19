@@ -170,7 +170,11 @@ let ls;
 ipcMain.on("start-recording", async (a) => {
   event = a;
   console.log("Recording started...");
-  fs.unlinkSync("output.wav");
+  try {
+    fs.unlinkSync("output.wav");
+  } catch (error) {
+    console.error("Error deleting file:", error);
+  }
   if (ls && !ls.killed) {
     ls.kill("SIGINT");
     ls = null;
