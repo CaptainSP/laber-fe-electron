@@ -168,26 +168,26 @@ let audioStream;
 let recording;
 let recognizeStream;
 
-recording = recorder.record({
-  sampleRate: 16000, // Sample rate (adjust as needed)
-  channels: 1, // Mono audio
-  audioType: "wav", // Output audio type,
-  recorder: "sox", // Try also "arecord" or "sox"
-  debug: "record",
-});
-audioStream = recording.stream();
-audioStream.on("end", () => {
-  if (recognizeStream) {
-    recognizeStream.end();
-    recognizeStream = null;
-  }
-});
-
 //recording.pause();
 
 ipcMain.on("start-recording", async (a) => {
   event = a;
   console.log("Recording started...");
+
+  recording = recorder.record({
+    sampleRate: 16000, // Sample rate (adjust as needed)
+    channels: 1, // Mono audio
+    audioType: "wav", // Output audio type,
+    recorder: "sox", // Try also "arecord" or "sox"
+    debug: "record",
+  });
+  audioStream = recording.stream();
+  audioStream.on("end", () => {
+    if (recognizeStream) {
+      recognizeStream.end();
+      recognizeStream = null;
+    }
+  });
 
   recognizeStream = client
     .streamingRecognize({
@@ -226,7 +226,7 @@ ipcMain.on("start-recording", async (a) => {
 
 ipcMain.handle("pause-recording", async (event) => {
   console.log("Recording paused...");
-  recording.pause();
+  recording.stop();
   if (recognizeStream) {
     recognizeStream.end();
     recognizeStream = null;
