@@ -175,7 +175,19 @@ ipcMain.on("start-recording", async (a) => {
     ls.kill("SIGINT");
     ls = null;
   }
-  ls = spawn("sox", ["-d", "output.wav"]);
+  // sox -d -r 16000 -c 1 -b 16 -e signed-integer output.wav
+  ls = spawn("sox", [
+    "-d",
+    "-r",
+    "16000",
+    "-c",
+    "1",
+    "-b",
+    "16",
+    "-e",
+    "signed-integer",
+    "output.wav",
+  ]);
 
   ls.stdout.on("data", (data) => {
     console.log(`stdout: ${data}`);
