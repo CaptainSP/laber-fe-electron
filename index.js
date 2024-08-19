@@ -59,9 +59,9 @@ function createWindow() {
   //mainWindow.loadFile("index.html");
 
   // İlk açıldığında tam ekran moduna geç
-  mainWindow.setKiosk(false);
+  mainWindow.setKiosk(true);
 
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 
   session.defaultSession.webRequest.onBeforeSendHeaders(
     this.filter,
