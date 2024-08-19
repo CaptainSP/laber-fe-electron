@@ -12,9 +12,9 @@ const os = require("os");
 const path = require("path");
 const fs = require("fs");
 const { v4 } = require("uuid");
+const { spawn } = require("node:child_process");
 
 const speech = require("@google-cloud/speech");
-const recorder = require("node-record-lpcm16");
 
 const client = new speech.SpeechClient({
   keyFilename: "./arcane-text-292515-f1270b8a6ab1.json",
@@ -23,7 +23,6 @@ const client = new speech.SpeechClient({
 let mainWindow;
 
 // set env to development
-process.env.NODE_ENV = "development";
 
 process.env.DEBUG = "record";
 
@@ -165,31 +164,30 @@ protocol.registerSchemesAsPrivileged([
 
 let event;
 
-let audioStream;
-let recording;
 let recognizeStream;
-
-recording = recorder.record({
-  sampleRate: 16000, // Sample rate (adjust as needed)
-  channels: 1, // Mono audio
-  audioType: "wav", // Output audio type,
-  recorder: "sox", // Try also "arecord" or "sox"
-  device: "waveaudio", // Try also "plughw:1,0" or "plughw:0,0",
-  debug: "record",
-});
-audioStream = recording.stream();
-audioStream.on("end", () => {
-  if (recognizeStream) {
-    recognizeStream.end();
-    recognizeStream = null;
-  }
-});
-
-//recording.pause();
+let ls;
 
 ipcMain.on("start-recording", async (a) => {
   event = a;
   console.log("Recording started...");
+  fs.unlinkSync("output.wav");
+  if (ls && !ls.killed) {
+    ls.kill("SIGINT");
+    ls = null;
+  }
+  ls = spawn("sox", ["-d", "output.wav"]);
+
+  ls.stdout.on("data", (data) => {
+    console.log(`stdout: ${data}`);
+  });
+
+  ls.stderr.on("data", (data) => {
+    console.error(`stderr: ${data}`);
+  });
+
+  ls.on("close", (code) => {
+    console.log(`child process exited with code ${code}`);
+  });
 
   recognizeStream = client
     .streamingRecognize({
@@ -221,17 +219,21 @@ ipcMain.on("start-recording", async (a) => {
       }
     });
 
-  audioStream.pipe(recognizeStream);
-
-  recording.resume();
+  setTimeout(() => {
+    console.log("Recording started...");
+    fs.createReadStream("output.wav").pipe(recognizeStream);
+  }, 1000);
 });
 
 ipcMain.handle("pause-recording", async (event) => {
   console.log("Recording paused...");
-  recording.pause();
   if (recognizeStream) {
     recognizeStream.end();
     recognizeStream = null;
+    if (ls) {
+      ls.kill("SIGINT");
+      ls = null;
+    }
   }
 });
 
