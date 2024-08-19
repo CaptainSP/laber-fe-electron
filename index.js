@@ -12,9 +12,9 @@ const os = require("os");
 const path = require("path");
 const fs = require("fs");
 const { v4 } = require("uuid");
-const { spawn } = require("node:child_process");
 
 const speech = require("@google-cloud/speech");
+const recorder = require("node-record-lpcm16");
 
 const client = new speech.SpeechClient({
   keyFilename: "./arcane-text-292515-f1270b8a6ab1.json",
@@ -164,107 +164,72 @@ protocol.registerSchemesAsPrivileged([
 
 let event;
 
+let audioStream;
+let recording;
 let recognizeStream;
-let ls;
-let interval;
-let stream;
+
+recording = recorder.record({
+  sampleRate: 16000, // Sample rate (adjust as needed)
+  channels: 1, // Mono audio
+  audioType: "wav", // Output audio type,
+  recorder: "sox", // Try also "arecord" or "sox"
+  debug: "record",
+});
+audioStream = recording.stream();
+audioStream.on("end", () => {
+  if (recognizeStream) {
+    recognizeStream.end();
+    recognizeStream = null;
+  }
+});
+
+//recording.pause();
 
 ipcMain.on("start-recording", async (a) => {
+  event = a;
   console.log("Recording started...");
-  try {
-    fs.unlinkSync("output.wav");
-  } catch (error) {
-    console.error("Error deleting file:", error);
-  }
-  if (ls && !ls.killed) {
-    ls.kill("SIGINT");
-    ls = null;
-  }
-  // sox -d -r 16000 -c 1 -b 16 -e signed-integer output.wav
-  ls = spawn("sox", [
-    "-d",
-    "-r",
-    "16000",
-    "-c",
-    "1",
-    "-b",
-    "16",
-    "-e",
-    "signed-integer",
-    "output.wav",
-  ]);
 
-  ls.stdout.on("data", (data) => {
-    console.log(`stdout: ${data}`);
-  });
-
-  ls.stderr.on("data", (data) => {
-    console.error(`stderr: ${data}`);
-  });
-
-  ls.on("close", (code) => {
-    console.log(`child process exited with code ${code}`);
-  });
-
-  interval = setInterval(() => {
-    console.log("Recording listening...");
-    event = a;
-
-    recognizeStream = client
-      .streamingRecognize({
-        config: {
-          encoding: "LINEAR16",
-          sampleRateHertz: 16000,
-          languageCode: "tr-TR",
-          enableSpeakerDiarization: true,
-          model: "latest_long",
-        },
-        interimResults: true,
-      })
-      .on("error", console.error)
-      .on("data", (data) => {
+  recognizeStream = client
+    .streamingRecognize({
+      config: {
+        encoding: "LINEAR16",
+        sampleRateHertz: 16000,
+        languageCode: "tr-TR",
+        enableSpeakerDiarization: true,
+        model: "latest_long",
+      },
+      interimResults: true,
+    })
+    .on("error", console.error)
+    .on("data", (data) => {
+      console.log(
+        `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`
+      );
+      if (data.results[0]?.isFinal) {
         console.log(
-          `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`
+          "Final transcript : ",
+          data.results[0]?.alternatives?.[0]?.transcript
         );
-        if (data.results[0]?.isFinal) {
-          console.log(
-            "Final transcript : ",
-            data.results[0]?.alternatives?.[0]?.transcript
-          );
-        }
-        if (event) {
-          event.sender.send("text", {
-            text: data.results[0]?.alternatives?.[0]?.transcript,
-            isFinal: data.results[0]?.isFinal,
-          });
-        }
-      });
-    try {
-      stream = fs.createReadStream("output.wav");
-      stream.pipe(recognizeStream);
-    } catch (error) {
-      console.error("Error reading file:", error);
-    }
-  }, 2000);
+      }
+      if (event) {
+        event.sender.send("text", {
+          text: data.results[0]?.alternatives?.[0]?.transcript,
+          isFinal: data.results[0]?.isFinal,
+        });
+      }
+    });
+
+  audioStream.pipe(recognizeStream);
+
+  recording.resume();
 });
 
 ipcMain.handle("pause-recording", async (event) => {
   console.log("Recording paused...");
+  recording.pause();
   if (recognizeStream) {
     recognizeStream.end();
     recognizeStream = null;
-    if (ls) {
-      ls.kill("SIGINT");
-      ls = null;
-    }
-    if (interval) {
-      clearInterval(interval);
-      interval = null;
-    }
-    if (stream) {
-      stream.close();
-      stream = null;
-    }
   }
 });
 
