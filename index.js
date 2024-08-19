@@ -166,9 +166,10 @@ let event;
 
 let recognizeStream;
 let ls;
+let interval;
+let stream;
 
 ipcMain.on("start-recording", async (a) => {
-  event = a;
   console.log("Recording started...");
   try {
     fs.unlinkSync("output.wav");
@@ -205,40 +206,46 @@ ipcMain.on("start-recording", async (a) => {
     console.log(`child process exited with code ${code}`);
   });
 
-  recognizeStream = client
-    .streamingRecognize({
-      config: {
-        encoding: "LINEAR16",
-        sampleRateHertz: 16000,
-        languageCode: "tr-TR",
-        enableSpeakerDiarization: true,
-        model: "latest_long",
-      },
-      interimResults: true,
-    })
-    .on("error", console.error)
-    .on("data", (data) => {
-      console.log(
-        `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`
-      );
-      if (data.results[0]?.isFinal) {
-        console.log(
-          "Final transcript : ",
-          data.results[0]?.alternatives?.[0]?.transcript
-        );
-      }
-      if (event) {
-        event.sender.send("text", {
-          text: data.results[0]?.alternatives?.[0]?.transcript,
-          isFinal: data.results[0]?.isFinal,
-        });
-      }
-    });
+  interval = setInterval(() => {
+    console.log("Recording listening...");
+    event = a;
 
-  setTimeout(() => {
-    console.log("Recording started...");
-    fs.createReadStream("output.wav").pipe(recognizeStream);
-  }, 1000);
+    recognizeStream = client
+      .streamingRecognize({
+        config: {
+          encoding: "LINEAR16",
+          sampleRateHertz: 16000,
+          languageCode: "tr-TR",
+          enableSpeakerDiarization: true,
+          model: "latest_long",
+        },
+        interimResults: true,
+      })
+      .on("error", console.error)
+      .on("data", (data) => {
+        console.log(
+          `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`
+        );
+        if (data.results[0]?.isFinal) {
+          console.log(
+            "Final transcript : ",
+            data.results[0]?.alternatives?.[0]?.transcript
+          );
+        }
+        if (event) {
+          event.sender.send("text", {
+            text: data.results[0]?.alternatives?.[0]?.transcript,
+            isFinal: data.results[0]?.isFinal,
+          });
+        }
+      });
+    try {
+      stream = fs.createReadStream("output.wav");
+      stream.pipe(recognizeStream);
+    } catch (error) {
+      console.error("Error reading file:", error);
+    }
+  }, 2000);
 });
 
 ipcMain.handle("pause-recording", async (event) => {
@@ -249,6 +256,14 @@ ipcMain.handle("pause-recording", async (event) => {
     if (ls) {
       ls.kill("SIGINT");
       ls = null;
+    }
+    if (interval) {
+      clearInterval(interval);
+      interval = null;
+    }
+    if (stream) {
+      stream.close();
+      stream = null;
     }
   }
 });
