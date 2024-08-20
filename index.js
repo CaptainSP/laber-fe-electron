@@ -55,13 +55,13 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
-  mainWindow.loadURL("http://10.0.0.16:3001/aichatfunc");
+  mainWindow.loadURL("http://10.0.0.16:3001/");
   //mainWindow.loadFile("index.html");
 
   // İlk açıldığında tam ekran moduna geç
   mainWindow.setKiosk(true);
 
-  //mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   session.defaultSession.webRequest.onBeforeSendHeaders(
     this.filter,
