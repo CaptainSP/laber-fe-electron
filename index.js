@@ -55,7 +55,7 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
-  mainWindow.loadURL("http://10.0.0.16:3001/aichat");
+  mainWindow.loadURL("http://10.0.0.16:3001/aichatfunc");
   //mainWindow.loadFile("index.html");
 
   // İlk açıldığında tam ekran moduna geç
