@@ -343,7 +343,7 @@ ipcMain.handle("merge-video", async (event, music) => {
 
   await axios.post("http://localhost:5000/merge_videos", {
     output: absOutput,
-    input: absInput,
+    input: videoPath ? absInput : undefined,
     photo: absPhoto,
     final: absFinal,
     music: absMusic,
