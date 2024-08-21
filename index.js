@@ -242,7 +242,7 @@ ipcMain.handle("print-iframe", async (event, url, printName) => {
     const printerList = await printWindow.webContents.getPrintersAsync();
     const defaultPrinter = printerList.find((printer) => printer.isDefault);
 
-    /*printWindow.webContents.print(
+    printWindow.webContents.print(
       {
         deviceName: printName || defaultPrinter.name,
         silent: true,
@@ -251,7 +251,7 @@ ipcMain.handle("print-iframe", async (event, url, printName) => {
       () => {
         //printWindow.close();
       }
-    );*/
+    );
   });
 });
 
