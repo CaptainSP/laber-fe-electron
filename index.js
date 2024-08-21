@@ -302,7 +302,11 @@ ipcMain.handle("delete-video", async (event) => {
       videoPath + "-input" + ".mp4"
     );
 
-    await fs.promises.unlink(filePath);
+    try {
+      await fs.promises.unlink(filePath);
+    } catch (error) {
+      console.error("Error deleting video:", error);
+    }
 
     videoPath = null;
   } catch (error) {
