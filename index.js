@@ -234,7 +234,7 @@ ipcMain.handle("pause-recording", async (event) => {
 });
 
 ipcMain.handle("print-iframe", async (event, url, printName) => {
-  const printWindow = new BrowserWindow({ show: true });
+  const printWindow = new BrowserWindow({ show: false });
 
   printWindow.loadURL(url);
 
@@ -249,7 +249,7 @@ ipcMain.handle("print-iframe", async (event, url, printName) => {
         printBackground: true,
       },
       () => {
-        //printWindow.close();
+        printWindow.close();
       }
     );
   });
