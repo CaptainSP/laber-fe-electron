@@ -63,23 +63,14 @@ function createWindow() {
 
   mainWindow.webContents.openDevTools();
 
-  session.defaultSession.webRequest.onBeforeSendHeaders(
-    this.filter,
-    (details, callback) => {
-      details.requestHeaders["User-Agent"] =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0";
 
-      callback({ requestHeaders: details.requestHeaders });
-    }
-  );
 
   // Kamera iznini otomatik vermek için
   session.defaultSession.setPermissionRequestHandler(
     (webContents, permission, callback) => {
       if (
         permission === "media" ||
-        permission === "display-capture" ||
-        permission === ""
+        permission === "display-capture"
       ) {
         return callback(true); // Kamera ve mikrofon izinlerini otomatik olarak ver
       }
@@ -91,7 +82,10 @@ function createWindow() {
     desktopCapturer.getSources({ types: ["screen"] }).then((sources) => {
       // Grant access to the first screen found.
       callback({ video: sources[0], audio: "loopback" });
-    });
+    }).catch((error) => {
+      console.error("Error getting screen sources:", error);
+      callback({ video: null, audio: null });
+    } );
   });
 
   mainWindow.on("close", () => {
