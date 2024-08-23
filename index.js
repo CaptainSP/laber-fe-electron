@@ -381,7 +381,7 @@ ipcMain.handle("merge-video", async (event, music) => {
   const absMusic = path.join(desktopPath, "laber-webcam-script", music);
 
   await axios.post("http://localhost:5000/merge_videos", {
-    output: absOutput,
+    output: outputPath ? absOutput : undefined,
     input: videoPath ? absInput : undefined,
     photo: absPhoto,
     final: absFinal,
