@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld("electron", {
   startVideo: () => ipcRenderer.invoke("start-video"),
   stopVideo: () => ipcRenderer.invoke("stop-video"),
   deleteVideo: () => ipcRenderer.invoke("delete-video"),
+  deleteOutput: () => ipcRenderer.invoke("delete-output"),
   saveImage: (imageArrayBuffer) =>
     ipcRenderer.invoke("save-image", imageArrayBuffer),
   getVideo: (path) => ipcRenderer.invoke("get-video", path),

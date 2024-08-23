@@ -309,6 +309,31 @@ ipcMain.handle("delete-video", async (event) => {
   }
 });
 
+ipcMain.handle("delete-output", async (event) => {
+  try {
+    console.log("Deleting output...");
+
+    const desktopPath = app.getPath("desktop");
+    const filePath = path.join(
+      desktopPath,
+      "laber-webcam-script",
+      outputPath + "-input" + ".mp4"
+    );
+
+    try {
+      await fs.promises.unlink(filePath);
+    } catch (error) {
+      console.error("Error deleting video:", error);
+    }
+
+    outputPath = null;
+  } catch (error) {
+    console.error("Error deleting video:", error);
+    throw error; // Bu hata frontend'e geri iletilecek
+  }
+});
+
+
 ipcMain.handle("merge-video", async (event, music) => {
   const final = v4();
 
