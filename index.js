@@ -63,15 +63,10 @@ function createWindow() {
 
   mainWindow.webContents.openDevTools();
 
-
-
   // Kamera iznini otomatik vermek için
   session.defaultSession.setPermissionRequestHandler(
     (webContents, permission, callback) => {
-      if (
-        permission === "media" ||
-        permission === "display-capture"
-      ) {
+      if (permission === "media" || permission === "display-capture") {
         return callback(true); // Kamera ve mikrofon izinlerini otomatik olarak ver
       }
       callback(false);
@@ -79,13 +74,16 @@ function createWindow() {
   );
 
   session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
-    desktopCapturer.getSources({ types: ["screen"] }).then((sources) => {
-      // Grant access to the first screen found.
-      callback({ video: sources[0], audio: "loopback" });
-    }).catch((error) => {
-      console.error("Error getting screen sources:", error);
-      callback({ video: null, audio: null });
-    } );
+    desktopCapturer
+      .getSources({ types: ["screen"] })
+      .then((sources) => {
+        // Grant access to the first screen found.
+        callback({ video: sources[0], audio: "loopback" });
+      })
+      .catch((error) => {
+        console.error("Error getting screen sources:", error);
+        callback({ video: null, audio: null });
+      });
   });
 
   mainWindow.on("close", () => {
@@ -167,6 +165,25 @@ let recognizeStream;
 ipcMain.on("start-recording", async (a) => {
   event = a;
   console.log("Recording started...");
+
+  try {
+    if (audioStream) {
+      recording.stop();
+      audioStream = null;
+      recording = null;
+    }
+  } catch (error) {
+    console.error("Error stopping audioStream:", error);
+  }
+
+  try {
+    if (recognizeStream) {
+      recognizeStream.end();
+      recognizeStream = null;
+    }
+  } catch (error) {
+    console.error("Error stopping recognizeStream:", error);
+  }
 
   recording = recorder.record({
     sampleRate: 16000, // Sample rate (adjust as needed)
@@ -332,7 +349,6 @@ ipcMain.handle("delete-output", async (event) => {
     throw error; // Bu hata frontend'e geri iletilecek
   }
 });
-
 
 ipcMain.handle("merge-video", async (event, music) => {
   const final = v4();
