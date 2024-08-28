@@ -111,6 +111,12 @@ function createMenu() {
             mainWindow.loadURL(targetUrl);
           },
         },
+        {
+          label: "Dev Tools",
+          click() {
+            mainWindow.webContents.openDevTools();
+          },
+        },
         // close app
         {
           label: "Close",
