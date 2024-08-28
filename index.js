@@ -55,7 +55,7 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
-  mainWindow.loadURL("http://10.0.0.16:3001/");
+  mainWindow.loadURL("https://kiosk.cerebeye.io/");
   //mainWindow.loadFile("index.html");
 
   // İlk açıldığında tam ekran moduna geç
