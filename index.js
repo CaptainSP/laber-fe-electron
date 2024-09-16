@@ -61,7 +61,7 @@ function createWindow() {
   // İlk açıldığında tam ekran moduna geç
   mainWindow.setKiosk(true);
 
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 
   // Kamera iznini otomatik vermek için
   session.defaultSession.setPermissionRequestHandler(
@@ -132,7 +132,28 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
+const { autoUpdater } = require("electron-updater");
+
 app.whenReady().then(() => {
+  autoUpdater.checkForUpdates();
+
+  autoUpdater.on("update-available", () => {
+    const notification = new Notification({
+      title: "Update available",
+      body: "Downloading update...",
+    });
+    notification.show();
+    return notification;
+  });
+
+  autoUpdater.on("update-downloaded", async () => {
+    autoUpdater.quitAndInstall();
+  });
+
+  setInterval(() => {
+    autoUpdater.checkForUpdates();
+  }, 30 * 1000);
+
   createWindow();
 
   app.on("activate", () => {
@@ -140,12 +161,6 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
-});
-
-app.on("window-all-closed", () => {
-  //if (process.platform !== "darwin") {
-  app.quit();
-  //}
 });
 
 protocol.registerSchemesAsPrivileged([
@@ -429,4 +444,29 @@ ipcMain.handle("save-image", async (event, imageArrayBuffer) => {
 ipcMain.handle("get-video", async (event, absPath) => {
   const arrayBuffer = await fs.promises.readFile(absPath);
   return arrayBuffer;
+});
+
+/// update.py
+
+const { spawn } = require("child_process");
+let spawned;
+const update = async () => {
+  const appPath = app.getAppPath();
+  const updatePath = path.join(appPath, "script/update.py");
+
+  spawned = spawn("python", [updatePath], {
+    stdio: "inherit",
+  });
+  console.log("Update started...");
+};
+
+update();
+
+app.on("window-all-closed", () => {
+  //if (process.platform !== "darwin") {
+  app.quit();
+  if (spawned) {
+    spawned.kill();
+  }
+  //}
 });
