@@ -484,10 +484,29 @@ const update = async () => {
   const appPath = app.getAppPath();
   const updatePath = path.join(appPath, "script/update.py");
 
-  spawned = spawn("python", [updatePath], {
-    stdio: "inherit",
+  spawned = spawn("python " + updatePath, {
+    shell: true,
   });
+  
   console.log("Update started...");
+
+  setTimeout(() => {
+    runPyApp();
+  }, 5000);
+};
+
+const runPyApp = async () => {
+  const pyPath = "C:/laber/laber-webcam-script/app.py";
+
+  if (spawned) {
+    spawned.kill();
+  }
+
+  spawned = spawn("python " + pyPath, {
+    shell: true,
+  });
+  
+  console.log("App started...");
 };
 
 update();

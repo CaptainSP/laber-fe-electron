@@ -29,7 +29,7 @@ def main():
     download_script(script_url, save_path)
 
     # Optionally, run the new script
-    os.system(f"python {save_path}")
+    # os.system(f"python {save_path}")
 
 
 if __name__ == "__main__":
