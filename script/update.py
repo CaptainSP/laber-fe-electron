@@ -20,7 +20,7 @@ def main():
     # Define the URL of the script to be downloaded
     script_url = 'https://pdate.ceremeet.com/laberUpdate/app.py'
     # Define the save path (same location as the script to be updated)
-    save_path = './app.py'
+    save_path = 'C:/laber/laber-webcam-script/app.py'
 
     # Ensure the save path directory exists
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
