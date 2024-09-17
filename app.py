@@ -5,6 +5,9 @@ import time
 import threading
 from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip, ImageClip, vfx
 from moviepy.audio.fx.all import audio_loop
+import datetime
+import os
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
@@ -51,6 +54,31 @@ def record_webcam(output_video_path, fps, duration):
     writer.close()
 
     return output_video_path
+
+
+def delete_older_videos(directory, age_in_days):
+    now = datetime.datetime.now()
+    age_in_seconds = age_in_days * 86400  # 1 day = 86400 seconds
+
+    for filename in os.listdir(directory):
+        if filename == 'blank_input.mp4':
+            continue
+        file_path = os.path.join(directory, filename)
+        if os.path.isfile(file_path) and file_path.endswith('.mp4'):
+            file_modified = os.path.getmtime(file_path)
+            if (now - datetime.datetime.fromtimestamp(file_modified)).total_seconds() > age_in_seconds:
+                try:
+                    os.remove(file_path)
+                    print(f"Deleted {file_path}")
+                except Exception as e:
+                    print(f"Error deleting {file_path}: {str(e)}")
+
+
+VIDEO_DIRECTORY = "./"
+
+
+def scheduled_delete_old_videos():
+    delete_older_videos(VIDEO_DIRECTORY, age_in_days=7)
 
 
 def concatenate_videos(input_video_path, output_video_path, final_output_path, music_path, transition_duration, photo_path=None):
@@ -164,4 +192,12 @@ def interrupt_recording():
 
 
 if __name__ == '__main__':
+    # Create the video directory if it doesn't exist
+    if not os.path.exists(VIDEO_DIRECTORY):
+        os.makedirs(VIDEO_DIRECTORY)
+
+    # Initialize the scheduler
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(scheduled_delete_old_videos, 'interval', minutes=1)
+    scheduler.start()
     app.run(host='0.0.0.0', port=5000)

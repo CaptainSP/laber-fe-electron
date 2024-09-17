@@ -17,7 +17,10 @@ const speech = require("@google-cloud/speech");
 const recorder = require("node-record-lpcm16");
 
 const client = new speech.SpeechClient({
-  keyFilename: "./arcane-text-292515-f1270b8a6ab1.json",
+  keyFilename: path.join(
+    app.getAppPath(),
+    "/arcane-text-292515-f1270b8a6ab1.json"
+  ),
 });
 
 let mainWindow;
@@ -60,6 +63,8 @@ function createWindow() {
 
   // İlk açıldığında tam ekran moduna geç
   mainWindow.setKiosk(true);
+
+  mainWindow.focus();
 
   //mainWindow.webContents.openDevTools();
 
@@ -138,21 +143,46 @@ app.whenReady().then(() => {
   autoUpdater.checkForUpdates();
 
   autoUpdater.on("update-available", () => {
-    const notification = new Notification({
-      title: "Update available",
-      body: "Downloading update...",
-    });
-    notification.show();
-    return notification;
+    // const dialog = require("electron").dialog;
+    // dialog
+    //   .showMessageBox({
+    //     type: "info",
+    //     title: "Update available",
+    //     message:
+    //       "A new version of the application is available. Do you want to update now?",
+    //     buttons: ["Yes", "No"],
+    //   })
+    //   .then((response) => {
+    //     if (response.response === 0) {
+    //       autoUpdater.downloadUpdate();
+    //     }
+    //   });
+    autoUpdater.downloadUpdate();
   });
 
   autoUpdater.on("update-downloaded", async () => {
     autoUpdater.quitAndInstall();
   });
 
+  autoUpdater.on("error", (message) => {
+    console.error("There was a problem updating the application");
+    console.error(message);
+    const dialog = require("electron").dialog;
+    dialog.showErrorBox("Error", message);
+  });
+
+  // if no update
+  // autoUpdater.on("update-not-available", () => {
+  //   const dialog = require("electron").dialog;
+  //   dialog.showErrorBox(
+  //     "No updates available",
+  //     "The application is up to date."
+  //   );
+  // });
+
   setInterval(() => {
     autoUpdater.checkForUpdates();
-  }, 30 * 1000);
+  }, 3 * 60 * 1000);
 
   createWindow();
 
@@ -306,7 +336,7 @@ ipcMain.handle("save-video", async (event, videoArrayBuffer) => {
 
     videoPath = v4();
 
-    const desktopPath = app.getPath("desktop");
+    const desktopPath = "C:/laber";
     const filePath = path.join(
       desktopPath,
       "laber-webcam-script",
@@ -327,7 +357,7 @@ ipcMain.handle("delete-video", async (event) => {
   try {
     console.log("Deleting video...");
 
-    const desktopPath = app.getPath("desktop");
+    const desktopPath = "C:/laber";
     const filePath = path.join(
       desktopPath,
       "laber-webcam-script",
@@ -351,7 +381,7 @@ ipcMain.handle("delete-output", async (event) => {
   try {
     console.log("Deleting output...");
 
-    const desktopPath = app.getPath("desktop");
+    const desktopPath = "C:/laber";
     const filePath = path.join(
       desktopPath,
       "laber-webcam-script",
@@ -374,7 +404,7 @@ ipcMain.handle("delete-output", async (event) => {
 ipcMain.handle("merge-video", async (event, music) => {
   const final = v4();
 
-  const desktopPath = app.getPath("desktop");
+  const desktopPath = "C:/laber";
   const absOutput = path.join(
     desktopPath,
     "laber-webcam-script",
@@ -412,7 +442,7 @@ ipcMain.handle("merge-video", async (event, music) => {
 });
 
 ipcMain.handle("start-video", async (event) => {
-  const desktopPath = app.getPath("desktop");
+  const desktopPath = "C:/laber";
   const absOutput = path.join(
     desktopPath,
     "laber-webcam-script",
@@ -431,7 +461,7 @@ ipcMain.handle("stop-video", async (event) => {
 });
 
 ipcMain.handle("save-image", async (event, imageArrayBuffer) => {
-  const desktopPath = app.getPath("desktop");
+  const desktopPath = "C:/laber";
   const filePath = path.join(
     desktopPath,
     "laber-webcam-script",
