@@ -488,7 +488,12 @@ const update = async () => {
     shell: true,
   });
   
+  spawned.stdio[1].on("data", (data) => {
+    fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", data.toString());
+  } );
+
   console.log("Update started...");
+  fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", "Update started...");
 
   setTimeout(() => {
     runPyApp();
@@ -505,7 +510,17 @@ const runPyApp = async () => {
   spawned = spawn("python " + pyPath, {
     shell: true,
   });
-  
+
+  spawned.stdio[1].on("data", (data) => {
+    fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", data.toString());
+  });
+  fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", "App started...");
+
+  spawned.stderr.on("data", (data) => {
+    console.error(`stderr: ${data}`);
+    fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", `stderr: ${data}`);
+  });
+
   console.log("App started...");
 };
 

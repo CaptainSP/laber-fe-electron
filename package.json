@@ -14,6 +14,7 @@
   "dependencies": {
     "@google-cloud/speech": "^6.7.0",
     "axios": "^1.7.3",
+    "electron-log": "^5.2.0",
     "electron-updater": "^6.3.4",
     "node-record-lpcm16": "^1.0.1",
     "uuid": "^10.0.0",
