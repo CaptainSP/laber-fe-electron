@@ -346,6 +346,10 @@ ipcMain.handle("save-video", async (event, videoArrayBuffer) => {
     await fs.promises.writeFile(filePath, Buffer.from(videoArrayBuffer));
 
     console.log("Successfully saved video:", filePath);
+    fs.appendFileSync(
+      "C:/laber/laber-webcam-script/log.txt",
+      "Successfully saved video:" + filePath
+    );
     return filePath;
   } catch (error) {
     console.error("Error saving video:", error);
@@ -431,14 +435,31 @@ ipcMain.handle("merge-video", async (event, music) => {
 
   const absMusic = path.join(desktopPath, "laber-webcam-script", music);
 
-  await axios.post("http://localhost:5000/merge_videos", {
-    output: outputPath ? absOutput : undefined,
-    input: videoPath ? absInput : undefined,
-    photo: absPhoto,
-    final: absFinal,
-    music: absMusic,
-  });
-  return absFinal;
+  try {
+    const response = await axios.post("http://localhost:5000/merge_videos", {
+      output: outputPath ? absOutput : undefined,
+      input: videoPath ? absInput : undefined,
+      photo: absPhoto,
+      final: absFinal,
+      music: absMusic,
+    });
+    fs.appendFileSync(
+      "C:/laber/laber-webcam-script/log.txt",
+      "\n\n" + JSON.stringify(response.data, null, 2) + "\n\n"
+    );
+    return absFinal;
+  } catch (error) {
+    console.error("Error merging video:", error);
+    fs.appendFileSync(
+      "C:/laber/laber-webcam-script/log.txt",
+      "\n\n" +
+        error +
+        "\n\n" +
+        JSON.stringify(error.response.data, null, 2) +
+        "\n\n"
+    );
+    throw error; // Bu hata frontend'e geri iletilecek
+  }
 });
 
 ipcMain.handle("start-video", async (event) => {
@@ -487,17 +508,28 @@ const update = async () => {
   spawned = spawn("python " + updatePath, {
     shell: true,
   });
-  
+
   spawned.stdio[1].on("data", (data) => {
     fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", data.toString());
-  } );
+  });
+
+  spawned.stderr.on("data", (data) => {
+    console.error(`stderr: ${data}`);
+    fs.appendFileSync(
+      "C:/laber/laber-webcam-script/log.txt",
+      `stderr: ${data}`
+    );
+  });
 
   console.log("Update started...");
-  fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", "Update started...");
+  fs.appendFileSync(
+    "C:/laber/laber-webcam-script/log.txt",
+    "Update started..."
+  );
 
   setTimeout(() => {
     runPyApp();
-  }, 5000);
+  }, 10000);
 };
 
 const runPyApp = async () => {
@@ -518,7 +550,10 @@ const runPyApp = async () => {
 
   spawned.stderr.on("data", (data) => {
     console.error(`stderr: ${data}`);
-    fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", `stderr: ${data}`);
+    fs.appendFileSync(
+      "C:/laber/laber-webcam-script/log.txt",
+      `stderr: ${data}`
+    );
   });
 
   console.log("App started...");
