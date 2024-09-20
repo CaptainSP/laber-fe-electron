@@ -62,11 +62,18 @@ function createWindow() {
   //mainWindow.loadFile("index.html");
 
   // İlk açıldığında tam ekran moduna geç
-  mainWindow.setKiosk(true);
+  //  if darwin
+
+  if (process.platform === "darwin") {
+    mainWindow.setKiosk(false);
+    mainWindow.setFullScreen(true);
+    mainWindow.webContents.openDevTools();
+    mainWindow.menuBarVisible = true;
+  } else {
+    mainWindow.setKiosk(true);
+  }
 
   mainWindow.focus();
-
-  //mainWindow.webContents.openDevTools();
 
   // Kamera iznini otomatik vermek için
   session.defaultSession.setPermissionRequestHandler(
@@ -260,6 +267,7 @@ ipcMain.on("start-recording", async (a) => {
         enableSpeakerDiarization: true,
         model: "latest_long",
       },
+      singleUtterance: true,
       interimResults: true,
     })
     .on("error", console.error)
