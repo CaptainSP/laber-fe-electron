@@ -389,7 +389,7 @@ ipcMain.handle("delete-output", async (event) => {
     const filePath = path.join(
       desktopPath,
       "laber-webcam-script",
-      outputPath + "-input" + ".mp4"
+      outputPath + "-output" + ".mp4"
     );
 
     try {
@@ -398,7 +398,7 @@ ipcMain.handle("delete-output", async (event) => {
       console.error("Error deleting video:", error);
     }
 
-    outputPath = null;
+    outputPath = v4();
   } catch (error) {
     console.error("Error deleting video:", error);
     throw error; // Bu hata frontend'e geri iletilecek
@@ -434,6 +434,16 @@ ipcMain.handle("merge-video", async (event, music) => {
   );
 
   const absMusic = path.join(desktopPath, "laber-webcam-script", music);
+
+  fs.appendFileSync(
+    "C:/laber/laber-webcam-script/log.txt",
+    "Sending to merge_videos..."
+  );
+  fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", "\n\n" + absMusic);
+  fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", "\n\n" + absPhoto);
+  fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", "\n\n" + absFinal);
+  fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", "\n\n" + absInput);
+  fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", "\n\n" + absOutput);
 
   try {
     const response = await axios.post("http://localhost:5000/merge_videos", {
@@ -501,11 +511,40 @@ ipcMain.handle("get-video", async (event, absPath) => {
 
 const { spawn } = require("child_process");
 let spawned;
+
+const killPython = async () => {
+  spawned = spawn("taskkill /IM python.exe /F", {
+    shell: true,
+  });
+  return new Promise((resolve, reject) => {
+    spawned.on("close", (code) => {
+      resolve();
+    });
+  });
+};
+
 const update = async () => {
+  await killPython();
+
+  await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, 20000);
+  });
+
   const appPath = app.getAppPath();
   const updatePath = path.join(appPath, "script/update.py");
 
-  spawned = spawn("python " + updatePath, {
+  const fileContent = fs.readFileSync(updatePath, "utf8");
+  fs.writeFileSync("C:/laber/laber-webcam-script/update.py", fileContent);
+
+  console.log("Update file copied...");
+  fs.appendFileSync(
+    "C:/laber/laber-webcam-script/log.txt",
+    "Update file copied..."
+  );
+
+  spawned = spawn("python " + "C:/laber/laber-webcam-script/update.py", {
     shell: true,
   });
 
