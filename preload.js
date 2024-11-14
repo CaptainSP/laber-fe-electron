@@ -9,14 +9,14 @@ contextBridge.exposeInMainWorld("electron", {
   saveVideo: (videoArrayBuffer) =>
     ipcRenderer.invoke("save-video", videoArrayBuffer),
   mergeVideo: (music) => ipcRenderer.invoke("merge-video", music),
-  startVideo: () => ipcRenderer.invoke("start-video"),
+  startVideo: (deviceId) => ipcRenderer.invoke("start-video",deviceId),
   stopVideo: () => ipcRenderer.invoke("stop-video"),
   deleteVideo: () => ipcRenderer.invoke("delete-video"),
   deleteOutput: () => ipcRenderer.invoke("delete-output"),
   saveImage: (imageArrayBuffer) =>
     ipcRenderer.invoke("save-image", imageArrayBuffer),
   getVideo: (path) => ipcRenderer.invoke("get-video", path),
-  startRecording: () => ipcRenderer.send("start-recording"),
+  startRecording: (language) => ipcRenderer.send("start-recording",language),
   pauseRecording: () => ipcRenderer.invoke("pause-recording"),
   onText: (callback) => {
     console.log("onText listens");

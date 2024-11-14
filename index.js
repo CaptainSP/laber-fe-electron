@@ -109,7 +109,8 @@ function createWindow() {
 
 function createMenu() {
   const localIpAddress = getLocalIpAddress(); // IP adresini al
-  const targetUrl = `http://10.0.0.16:3001/login`; // Kullanılacak URL
+  // const targetUrl = `http://10.0.0.16:3001/login`; // Kullanılacak URL
+  const targetUrl = `http://localhost:3000/survey/survey`; // Kullanılacak URL
   console.log(targetUrl);
   const template = [
     {
@@ -121,6 +122,18 @@ function createMenu() {
             mainWindow.webContents.openDevTools();
 
             mainWindow.loadURL(targetUrl);
+          },
+        },
+        {
+          label: "Change Devices",
+          click() {
+            const currentWindowUrl = mainWindow.webContents.getURL();
+            const urlObj = new URL(currentWindowUrl);
+            const path = "/devices";
+            const protocol = urlObj.protocol;
+            const host = urlObj.host;
+            const newUrl = protocol + "//" + host + path;
+            mainWindow.loadURL(newUrl);
           },
         },
         {
@@ -220,7 +233,28 @@ let recognizeStream;
 
 //recording.pause();
 
-ipcMain.on("start-recording", async (a) => {
+let noTextTimeout;
+
+const initNoTextTimeout = () => {
+  if (noTextTimeout) {
+    clearTimeout(noTextTimeout);
+  }
+  console.log("initNoTextTimeout");
+  noTextTimeout = setTimeout(() => {
+    if (recognizeStream) {
+      recognizeStream.end();
+      recognizeStream = null;
+    }
+    if (event) {
+      event.sender.send("text", {
+        text: "",
+        isFinal: true,
+      });
+    }
+  }, 10000);
+};
+
+ipcMain.on("start-recording", async (a, language) => {
   event = a;
   console.log("Recording started...");
 
@@ -257,13 +291,17 @@ ipcMain.on("start-recording", async (a) => {
       recognizeStream = null;
     }
   });
+  audioStream.on("error", (error) => {
+    console.error("Error on audioStream:", error);
+  });
 
+ 
   recognizeStream = client
     .streamingRecognize({
       config: {
         encoding: "LINEAR16",
         sampleRateHertz: 16000,
-        languageCode: "tr-TR",
+        languageCode: language == "tr" ? "tr-TR" : "en-US",
         enableSpeakerDiarization: true,
         model: "latest_long",
       },
@@ -273,7 +311,8 @@ ipcMain.on("start-recording", async (a) => {
     .on("error", console.error)
     .on("data", (data) => {
       console.log(
-        `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`
+        `Real time transcript : ${data.results[0]?.alternatives?.[0]?.transcript} [isFinal: ${data.results[0]?.isFinal}]`,
+        data
       );
       if (data.results[0]?.isFinal) {
         console.log(
@@ -287,6 +326,9 @@ ipcMain.on("start-recording", async (a) => {
           isFinal: data.results[0]?.isFinal,
         });
       }
+      
+        initNoTextTimeout();
+      
     });
 
   audioStream.pipe(recognizeStream);
@@ -300,6 +342,8 @@ ipcMain.handle("pause-recording", async (event) => {
   if (recognizeStream) {
     recognizeStream.end();
     recognizeStream = null;
+    clearTimeout(noTextTimeout);
+    noTextTimeout = undefined;
   }
 });
 
@@ -480,17 +524,38 @@ ipcMain.handle("merge-video", async (event, music) => {
   }
 });
 
-ipcMain.handle("start-video", async (event) => {
+ipcMain.handle("start-video", async (event, deviceId) => {
   const desktopPath = "C:/laber";
   const absOutput = path.join(
     desktopPath,
     "laber-webcam-script",
     outputPath + "-output" + ".mp4"
   );
-  await axios.post("http://localhost:5000/start_video", {
+
+  console.log("device", deviceId, typeof deviceId);
+  const response = await axios.post("http://localhost:5000/start_video", {
     output: absOutput,
+    camera_id: parseInt(deviceId),
     duration: 60 * 10,
   });
+  fs.appendFileSync("C:/laber/laber-webcam-script/log.txt", "Start video...");
+  fs.appendFileSync(
+    "C:/laber/laber-webcam-script/log.txt",
+    "Device ID: " + deviceId
+  );
+  fs.appendFileSync(
+    "C:/laber/laber-webcam-script/log.txt",
+    "Output: " + absOutput
+  );
+  fs.appendFileSync(
+    "C:/laber/laber-webcam-script/log.txt",
+    "Duration: " + 60 * 10
+  );
+  fs.appendFileSync(
+    "C:/laber/laber-webcam-script/log.txt",
+    JSON.stringify(response.data, null, 2)
+  );
+
   return true;
 });
 
@@ -518,6 +583,7 @@ ipcMain.handle("get-video", async (event, absPath) => {
 /// update.py
 
 const { spawn } = require("child_process");
+const { url } = require("inspector");
 let spawned;
 
 const killPython = async () => {
