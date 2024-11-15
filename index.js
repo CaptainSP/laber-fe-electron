@@ -450,7 +450,7 @@ ipcMain.handle("delete-output", async (event) => {
       console.error("Error deleting video:", error);
     }
 
-    outputPath = v4();
+    outputPath = undefined;
   } catch (error) {
     console.error("Error deleting video:", error);
     throw error; // Bu hata frontend'e geri iletilecek
@@ -525,6 +525,7 @@ ipcMain.handle("merge-video", async (event, music) => {
 });
 
 ipcMain.handle("start-video", async (event, deviceId) => {
+  outputPath = v4();
   const desktopPath = "C:/laber";
   const absOutput = path.join(
     desktopPath,
