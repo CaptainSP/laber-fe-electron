@@ -4,17 +4,54 @@ const {
   BrowserWindow,
   session,
   Menu,
-  protocol,
   ipcMain,
   desktopCapturer,
+  protocol,
+  net,
 } = require("electron");
 const os = require("os");
 const path = require("path");
+const nodeurl = require("url");
 const fs = require("fs");
 const { v4 } = require("uuid");
 
 const speech = require("@google-cloud/speech");
 const recorder = require("node-record-lpcm16");
+
+const appPath = app.getAppPath();
+const resourcesPath = process.resourcesPath;
+console.log("appPath", appPath);
+console.log("resourcesPath", resourcesPath);
+console.log(__dirname);
+
+try {
+  fs.appendFileSync(
+    "C:/laber/laber-webcam-script/log.txt",
+    "\n\nApp Path: " +
+      appPath +
+      "\n\n" +
+      "Resources Path: " +
+      resourcesPath +
+      "\n\n" +
+      "Dirname: " +
+      __dirname +
+      "\n\n"
+  );
+} catch (error) {
+  console.error(error);
+}
+
+const soxPaths = {
+  win: path.join(resourcesPath, "extraResources", "sox/win32/sox.exe"),
+  mac: path.join(appPath, "extraResources", "sox/mac/sox"),
+};
+
+let cmd = "sox";
+if (process.platform === "win32") {
+  cmd = soxPaths.win;
+} else if (process.platform === "darwin") {
+  //cmd = soxPaths.mac;
+}
 
 const client = new speech.SpeechClient({
   keyFilename: path.join(
@@ -58,7 +95,7 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
-  mainWindow.loadURL("https://kiosk.cerebeye.io/");
+  mainWindow.loadURL("http://localhost:3000/enable-payment");
   //mainWindow.loadFile("index.html");
 
   // İlk açıldığında tam ekran moduna geç
@@ -125,6 +162,18 @@ function createMenu() {
           },
         },
         {
+          label: "Ödeme Sistemini Aktifleştir",
+          click() {
+            mainWindow.loadURL("https://kiosk.cerebeye.io/enable-payment");
+          },
+        },
+        {
+          label: "Ödeme Sistemini Kapat",
+          click() {
+            mainWindow.loadURL("https://kiosk.cerebeye.io/bypass-payment");
+          },
+        },
+        {
           label: "Change Devices",
           click() {
             const currentWindowUrl = mainWindow.webContents.getURL();
@@ -160,6 +209,38 @@ function createMenu() {
 const { autoUpdater } = require("electron-updater");
 
 app.whenReady().then(() => {
+  // session.defaultSession.webRequest.onBeforeRequest(
+  //   {
+  //     urls: ["*://*/*"],
+  //     type: ["media"],
+  //   },
+  //   (details, callback) => {
+  //     if (details.url.includes(".mp4") && !details.url.includes("file://")) {
+  //       const urlParsed = new URL(details.url);
+  //       const filePath = urlParsed.pathname;
+  //       callback({
+  //         cancel: false,
+  //         redirectURL: "atom://" + filePath
+  //       });
+  //     } else {
+  //       callback({
+  //         cancel: false,
+  //       });
+  //     }
+  //   }
+  // );
+
+  protocol.handle("atom", (request) => {
+    const filePath = request.url.slice("atom://".length);
+    console.log(
+      "atom",
+      nodeurl.pathToFileURL(path.join(__dirname, "public", decodeURIComponent(filePath))).toString()
+    );
+    return net.fetch(
+      nodeurl.pathToFileURL(path.join(__dirname, "public", decodeURIComponent(filePath))).toString()
+    );
+  });
+
   autoUpdater.checkForUpdates();
 
   autoUpdater.on("update-available", () => {
@@ -283,6 +364,7 @@ ipcMain.on("start-recording", async (a, language) => {
     audioType: "wav", // Output audio type,
     recorder: "sox", // Try also "arecord" or "sox"
     debug: "record",
+    cmd: cmd,
   });
   audioStream = recording.stream();
   audioStream.on("end", () => {
@@ -295,7 +377,6 @@ ipcMain.on("start-recording", async (a, language) => {
     console.error("Error on audioStream:", error);
   });
 
- 
   recognizeStream = client
     .streamingRecognize({
       config: {
@@ -326,9 +407,8 @@ ipcMain.on("start-recording", async (a, language) => {
           isFinal: data.results[0]?.isFinal,
         });
       }
-      
-        initNoTextTimeout();
-      
+
+      initNoTextTimeout();
     });
 
   audioStream.pipe(recognizeStream);
@@ -585,6 +665,7 @@ ipcMain.handle("get-video", async (event, absPath) => {
 
 const { spawn } = require("child_process");
 const { url } = require("inspector");
+const sox = require("node-record-lpcm16/recorders/sox");
 let spawned;
 
 const killPython = async () => {
